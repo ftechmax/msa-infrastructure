@@ -1,0 +1,25 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: User
+metadata:
+  name: rabbitmq-admin-user
+spec:
+  rabbitmqClusterReference:
+    name: rabbitmq
+  importCredentialsSecret:
+    name: rabbitmq-admin-user
+  tags:
+    - administrator
+---
+apiVersion: rabbitmq.com/v1beta1
+kind: Permission
+metadata:
+  name: rabbitmq-admin-user
+spec:
+  rabbitmqClusterReference:
+    name: rabbitmq
+  vhost: '/'
+  user: admin
+  permissions:
+    write: '.*'
+    configure: '.*'
+    read: '.*'

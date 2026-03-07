@@ -1,0 +1,34 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+  annotations:
+    rabbitmq.com/topology-allowed-namespaces: '*'
+spec:
+  replicas: 1
+  service:
+    type: ClusterIP
+  resources:
+    requests: # default cpu: 1, memory: 2Gi
+      cpu: 0
+      memory: 150Mi
+    limits: # default cpu: 2, memory: 2Gi
+      cpu: 0
+      memory: 750Mi
+  rabbitmq:
+    additionalPlugins: []
+  override:
+    statefulSet:
+      spec:
+        volumeClaimTemplates:
+          - apiVersion: v1
+            kind: PersistentVolumeClaim
+            metadata:
+              name: persistence
+            spec:
+              volumeMode: Filesystem
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 10Gi

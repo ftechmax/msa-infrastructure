@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ferretdb
+  labels:
+    app: ferretdb
+spec:
+  selector:
+    app: ferretdb
+  ports:
+    - port: 27017
+      targetPort: 27017

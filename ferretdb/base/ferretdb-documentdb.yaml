@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ferretdb-postgres
+spec:
+  serviceName: ferretdb-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ferretdb-postgres
+  template:
+    metadata:
+      labels:
+        app: ferretdb-postgres
+    spec:
+      containers:
+        - name: ferretdb-postgres
+          image: ghcr.io/ferretdb/postgres-documentdb:17-0.107.0-ferretdb-2.7.0
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: ferretdb-postgres
+          env:
+            - name: POSTGRES_DB
+              value: postgres
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ferretdb-postgres
+  labels:
+    app: ferretdb-postgres
+spec:
+  selector:
+    app: ferretdb-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

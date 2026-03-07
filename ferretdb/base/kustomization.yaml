@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ferretdb-system
+resources:
+  - namespace.yaml
+  - ferretdb.yaml
+  - ferretdb-documentdb.yaml
+  - service.yaml
+  - https://github.com/ftechmax/ferretdb-controller/releases/download/0.3.0/ferretdb-controller.yaml
