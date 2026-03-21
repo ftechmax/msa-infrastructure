@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-kube-local
+  namespace: istio-ingress
+spec:
+  secretName: wildcard-kube-local-tls
+  commonName: "*.kube.local"
+  dnsNames:
+    - "*.kube.local"
+    - "kube.local"
+  issuerRef:
+    kind: ClusterIssuer
+    name: local-ca
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth

@@ -7,7 +7,7 @@ spec:
   gatewayClassName: istio
   listeners:
     - name: http
-      hostname: "*"
+      hostname: "*.kube.local"
       port: 80
       protocol: HTTP
       allowedRoutes:
