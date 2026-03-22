@@ -6,4 +6,4 @@ resources:
   - clusterissuer-selfsigned.yaml
   - root-ca-certificate.yaml
   - clusterissuer-local-ca.yaml
-  - wildcard-kube-local-certificate.yaml
+

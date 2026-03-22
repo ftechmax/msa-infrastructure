@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
   - http-to-https-redirect.yaml
+  - wildcard-kube-local-certificate.yaml
 
 patches:
   - target:

@@ -4,6 +4,7 @@
 ## Deploy
 
 ```sh
+kubectl apply -k cert-manager/crd
 kubectl apply -k cert-manager/overlays/local
 
 kustomize build istio/crd --enable-helm | kubectl create -f - && rm -rf istio/crd/charts
