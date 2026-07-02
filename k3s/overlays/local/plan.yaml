@@ -11,7 +11,7 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: In
         values:
-          - "true"
+          - 'true'
   channel: https://update.k3s.io/v1-release/channels/stable
   serviceAccountName: system-upgrade
   upgrade:

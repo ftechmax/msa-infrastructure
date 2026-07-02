@@ -10,10 +10,8 @@ spec:
     type: ClusterIP
   resources:
     requests: # default cpu: 1, memory: 2Gi
-      cpu: 0
       memory: 150Mi
     limits: # default cpu: 2, memory: 2Gi
-      cpu: 0
       memory: 750Mi
   rabbitmq:
     additionalPlugins: []

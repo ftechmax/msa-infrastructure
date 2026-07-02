@@ -1,0 +1,7 @@
+# kubectl artifacts
+istio/base/charts/
+
+# Local TLS trust material
+*.crt
+*.key
+*.pem

@@ -8,7 +8,7 @@ spec:
     - name: gateway
       namespace: istio-ingress
   hostnames:
-    - "rabbitmq.kube.local"
+    - 'rabbitmq.kube.local'
   rules:
     - backendRefs:
         - name: rabbitmq
