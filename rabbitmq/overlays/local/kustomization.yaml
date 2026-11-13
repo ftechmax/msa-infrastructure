@@ -6,19 +6,17 @@ resources:
   - ./../../base
   - ./../../management
   - user-secret.yaml
-patches:
-  - target:
-      kind: RabbitmqCluster
-    patch: |-
-      - op: add
-        path: "/spec/rabbitmq/additionalPlugins/-"
-        value: rabbitmq_management
-    # - op: add
-    #   path: "/spec/rabbitmq/additionalPlugins/-"
-    #   value: rabbitmq_mqtt
-    # - op: add
-    #   path: "/spec/rabbitmq/additionalPlugins/-"
-    #   value: rabbitmq_shovel
-    # - op: add
-    #   path: "/spec/rabbitmq/additionalPlugins/-"
-    #   value: rabbitmq_shovel_management
+# Extra plugins on top of the base (which enables rabbitmq_management):
+# patches:
+#   - target:
+#       kind: RabbitmqCluster
+#     patch: |-
+#       - op: add
+#         path: "/spec/rabbitmq/additionalPlugins/-"
+#         value: rabbitmq_mqtt
+#       - op: add
+#         path: "/spec/rabbitmq/additionalPlugins/-"
+#         value: rabbitmq_shovel
+#       - op: add
+#         path: "/spec/rabbitmq/additionalPlugins/-"
+#         value: rabbitmq_shovel_management

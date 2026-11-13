@@ -105,16 +105,16 @@ covering `*.kube.internal`. HTTP requests for the configured domain and
 its subdomains redirect to HTTPS with status 301.
 
 Web UIs are exposed through the Istio `Gateway` in `istio-ingress` (HTTP on
-port 80) via `HTTPRoute`s on the `*.kube.local` domain:
+port 80) via `HTTPRoute`s on the `*.kube.internal` domain:
 
-| Service             | Hostname              |
-| ------------------- | --------------------- |
-| RabbitMQ management | `rabbitmq.kube.local` |
+| Service             | Hostname                 |
+| ------------------- | ------------------------ |
+| RabbitMQ management | `rabbitmq.kube.internal` |
 
 Point these hostnames at the gateway's ingress IP, e.g. in `/etc/hosts`:
 
 ```
-<gateway-ip> rabbitmq.kube.local
+<gateway-ip> rabbitmq.kube.internal
 ```
 
 The image registry is reached directly on the node via NodePort `32000`

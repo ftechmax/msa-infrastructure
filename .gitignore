@@ -8,3 +8,4 @@ istio/base/charts/
 
 # Other
 /istio/overlays/internal/
+/rabbitmq/overlays/internal/

@@ -5,6 +5,7 @@ metadata:
   annotations:
     rabbitmq.com/topology-allowed-namespaces: '*'
 spec:
+  image: rabbitmq:4.3.7-management
   replicas: 1
   service:
     type: ClusterIP
@@ -14,7 +15,8 @@ spec:
     limits: # default cpu: 2, memory: 2Gi
       memory: 750Mi
   rabbitmq:
-    additionalPlugins: []
+    additionalPlugins:
+      - rabbitmq_management
   override:
     statefulSet:
       spec:
