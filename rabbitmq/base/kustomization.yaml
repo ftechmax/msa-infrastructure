@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - rabbitmqcluster.yaml
   - admin-user.yaml
+  - network-policy.yaml

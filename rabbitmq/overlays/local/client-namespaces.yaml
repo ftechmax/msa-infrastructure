@@ -1,0 +1,24 @@
+---
+# Application namespaces allowed to connect to RabbitMQ over AMQP. All AMQP
+# traffic is denied until a namespace is listed here.
+#
+# Add one complete rule per namespace by copying the example below. Never leave a
+# rule with an empty or missing `from`: that allows every source in and outside
+# the cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq-amqp-clients
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+  policyTypes:
+    - Ingress
+  ingress:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           kubernetes.io/metadata.name: <app-namespace>
+    #   ports:
+    #     - port: 5672

@@ -1,0 +1,25 @@
+---
+# Application namespaces allowed to send OTLP telemetry to the collector. All
+# OTLP traffic is denied until a namespace is listed here.
+#
+# Add one complete rule per namespace by copying the example below. Never leave a
+# rule with an empty or missing `from`: that allows every source in and outside
+# the cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: otel-collector-clients
+spec:
+  podSelector:
+    matchLabels:
+      app: otel-collector
+  policyTypes:
+    - Ingress
+  ingress:
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           kubernetes.io/metadata.name: <app-namespace>
+    #   ports:
+    #     - port: 4317
+    #     - port: 4318

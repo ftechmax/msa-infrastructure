@@ -4,3 +4,4 @@ namespace: kube-system
 
 resources:
   - https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.41.2/controller.yaml
+  - network-policy.yaml

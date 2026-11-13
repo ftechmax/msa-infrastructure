@@ -96,6 +96,87 @@ mTLS is currently **PERMISSIVE**: meshed pods negotiate mTLS with each other but
 still accept plaintext, so out-of-mesh clients such as the registry reached
 over its NodePort keep working.
 
+## Network policies
+
+Every namespace this repository deploys, except `system-upgrade` (see
+[Not covered](#not-covered)), carries Kubernetes `NetworkPolicy`s. A
+`default-deny` policy isolates every pod in the namespace in both directions,
+allowing only DNS out; per-workload policies then open the connections below.
+Outbound traffic to the internet is denied. Kubelet health probes keep working,
+because the CNI always allows traffic from a pod's own node.
+
+In `kube-system` only the sealed-secrets controller is selected, and the
+registry policy selects only the registry pod, so both are safe in a namespace
+shared with other workloads.
+
+| Namespace         | Workload                    | Inbound                                                                                                | Outbound                                  |
+| ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| `istio-ingress`   | Gateway                     | Anyone on `80`, `443`, `15021`                                                                         | istiod on `15012`; any pod in the cluster |
+| `istio-system`    | istiod                      | Gateway on `15012`; private ranges on `15017` (webhooks)                                               | API server on `6443`                      |
+| `rabbitmq-system` | RabbitMQ                    | Allow-listed namespaces on `5672`; gateway + topology operator on `15672`; RabbitMQ on `4369`, `25672` | RabbitMQ on `4369`, `25672`               |
+| `rabbitmq-system` | RabbitMQ operators          | Private ranges on `9443` (webhooks)                                                                    | API server on `6443`                      |
+| `rabbitmq-system` | messaging-topology-operator | (as above)                                                                                             | RabbitMQ management on `15672`            |
+| `observability`   | OpenTelemetry Collector     | Allow-listed namespaces on `4317`, `4318`                                                              | Nothing beyond DNS                        |
+| `cert-manager`    | cert-manager                | Private ranges on `10250` (webhook)                                                                    | API server on `6443`                      |
+| `reloader-system` | Reloader                    | Nothing                                                                                                | API server on `6443`                      |
+| `registry`        | Registry                    | Private ranges on `5000`                                                                               | Nothing                                   |
+| `kube-system`     | sealed-secrets controller   | Private ranges on `8080` (`kubeseal` via the API server)                                               | API server on `6443`                      |
+
+The Istio policies live in `istio/network-policies/` rather than `istio/base/`,
+because the base's label transformer would add `app.kubernetes.io/part-of` to
+their pod selectors.
+
+### Allowing application namespaces
+
+AMQP and OTLP are denied until an application namespace is allow-listed. Each
+environment overlay lists the namespaces in `client-namespaces.yaml`:
+
+- `rabbitmq/overlays/local/client-namespaces.yaml` for AMQP
+- `opentelemetry/overlays/local/client-namespaces.yaml` for OTLP
+
+Add one rule per namespace, following the commented example in each file. A
+rule with an empty or missing `from` allows every source, so never leave one
+behind when removing a namespace.
+
+### API server access and webhooks
+
+The API server runs outside the pod network, on port `6443` of the node with
+k3s. Rules for API server egress and for admission webhooks the API server
+calls match the private address ranges (`10.0.0.0/8`, `172.16.0.0/12`,
+`192.168.0.0/16`), so nothing can use those ports to reach the internet.
+
+To narrow API server egress to the node network, uncomment and fill in the
+commented patch in each local overlay: `istio`, `rabbitmq`, `cert-manager`,
+`reloader`, and `sealed-secrets`. On a cluster whose API server listens on
+another port, patch the same policies.
+
+### Adding outbound dependencies
+
+- An exporter added to the collector needs an egress rule for its backend in a
+  policy selecting `app: otel-collector`.
+- An ACME `ClusterIssuer`, such as Let's Encrypt, needs egress for the
+  cert-manager controller to the ACME server and, for DNS-01, the DNS
+  provider's API. Until that rule exists, ACME issuers can't register or issue.
+- A new Gateway listener on another port needs that port added to the
+  `gateway` policy.
+
+### Not covered
+
+- `system-upgrade`: its upgrade jobs download k3s from the internet.
+- The k3s components in `kube-system` (CoreDNS, metrics-server,
+  local-path-provisioner, `svclb`): CoreDNS forwards to upstream resolvers and
+  the others are managed by k3s, so a mistake there takes the cluster down.
+
+DNS stays allowed for every pod that resolves names, so a compromised
+dependency could still leak data through DNS queries. Blocking that needs a
+DNS-level filter, not a network policy.
+
+The policies assume ztunnel is not running. With the ambient data plane
+enabled, traffic between meshed pods arrives on port `15008` and kubelet probes
+come from `169.254.7.127`, and both need extra rules.
+
+The policies need a CNI that enforces them; k3s does this out of the box.
+
 ## Accessing services
 
 Configure the HTTPS domain and TLS Secret name in
@@ -104,8 +185,9 @@ Configure the HTTPS domain and TLS Secret name in
 covering `*.kube.internal`. HTTP requests for the configured domain and
 its subdomains redirect to HTTPS with status 301.
 
-Web UIs are exposed through the Istio `Gateway` in `istio-ingress` (HTTP on
-port 80) via `HTTPRoute`s on the `*.kube.internal` domain:
+Web UIs are exposed through the Istio `Gateway` in `istio-ingress` (HTTPS on
+port 443) via `HTTPRoute`s on the `*.kube.internal` domain. If you change the
+domain, update the hostname in `rabbitmq/management/httproute.yaml` to match.
 
 | Service             | Hostname                 |
 | ------------------- | ------------------------ |

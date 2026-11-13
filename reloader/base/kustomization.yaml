@@ -4,3 +4,4 @@ namespace: reloader-system
 resources:
   - namespace.yaml
   - https://raw.githubusercontent.com/stakater/Reloader/v1.4.24/deployments/kubernetes/reloader.yaml
+  - network-policy.yaml

@@ -3,3 +3,16 @@ kind: Kustomization
 
 resources:
   - ../../base
+
+# Narrow the API server egress from the private address ranges to the node
+# network, e.g. 192.168.1.0/24:
+# patches:
+#   - target:
+#       kind: NetworkPolicy
+#       name: sealed-secrets-controller
+#     patch: |-
+#       - op: replace
+#         path: /spec/egress/1/to
+#         value:
+#           - ipBlock:
+#               cidr: <node-cidr>

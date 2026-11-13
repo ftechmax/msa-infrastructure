@@ -6,6 +6,7 @@ resources:
   - ./../../base
   - ./../../management
   - user-secret.yaml
+  - client-namespaces.yaml
 # Extra plugins on top of the base (which enables rabbitmq_management):
 # patches:
 #   - target:
@@ -20,3 +21,15 @@ resources:
 #       - op: add
 #         path: "/spec/rabbitmq/additionalPlugins/-"
 #         value: rabbitmq_shovel_management
+# Narrow the operators' API server egress from the private address ranges to
+# the node network, e.g. 192.168.1.0/24:
+# patches:
+#   - target:
+#       kind: NetworkPolicy
+#       name: rabbitmq-operators
+#     patch: |-
+#       - op: replace
+#         path: /spec/egress/0/to
+#         value:
+#           - ipBlock:
+#               cidr: <node-cidr>

@@ -1,0 +1,7 @@
+# Kept out of ../base so its `includeSelectors` label transformer doesn't add
+# `app.kubernetes.io/part-of` to the policies' pod selectors.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - network-policy.yaml

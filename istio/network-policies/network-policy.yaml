@@ -1,0 +1,127 @@
+# Isolates every pod in the namespace: only DNS out.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: istio-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway
+  namespace: istio-ingress
+spec:
+  podSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # HTTP/HTTPS listeners and the status port, reached through the LoadBalancer
+    - ports:
+        - port: 80
+        - port: 443
+        - port: 15021
+  egress:
+    # Configuration and certificates from istiod
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+          podSelector:
+            matchLabels:
+              app: istiod
+      ports:
+        - port: 15012
+    # Route backends: any pod in the cluster, whose own policies decide what they accept
+    - to:
+        - namespaceSelector: {}
+---
+# Isolates every pod in the namespace: only DNS out.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: istio-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: istiod
+  namespace: istio-system
+spec:
+  podSelector:
+    matchLabels:
+      app: istiod
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # xDS and certificate signing for the ingress gateway
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+          podSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: gateway
+      ports:
+        - port: 15012
+    # Admission webhooks, called by the API server
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 15017
+  egress:
+    # Kubernetes API server (k3s serves it on the node's port 6443)
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 6443

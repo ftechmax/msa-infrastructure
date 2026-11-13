@@ -9,3 +9,5 @@ istio/base/charts/
 # Other
 /istio/overlays/internal/
 /rabbitmq/overlays/internal/
+/sealed-secrets/overlays/internal/
+/cert-manager/overlays/internal/

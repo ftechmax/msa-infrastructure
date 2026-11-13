@@ -1,0 +1,121 @@
+# Isolates every pod in the namespace: only DNS out.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # AMQP clients are allowed per namespace by the overlay's client-namespaces.yaml.
+    # Management API/UI: the ingress gateway and the messaging-topology-operator
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-ingress
+          podSelector:
+            matchLabels:
+              gateway.networking.k8s.io/gateway-name: gateway
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: messaging-topology-operator
+      ports:
+        - port: 15672
+    # Erlang distribution (epmd + inter-node) between cluster members
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+      ports:
+        - port: 4369
+        - port: 25672
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+      ports:
+        - port: 4369
+        - port: 25672
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rabbitmq-operators
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: rabbitmq-operator
+  policyTypes:
+    - Ingress
+    - Egress
+  # The API server runs outside the pod network, so both rules match on private
+  # address ranges; nothing on the internet can reach or be reached on these ports.
+  ingress:
+    # Admission webhooks, called by the API server
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 9443
+  egress:
+    # Kubernetes API server (k3s serves it on the node's port 6443)
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: messaging-topology-operator
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: messaging-topology-operator
+  policyTypes:
+    - Egress
+  egress:
+    # RabbitMQ management API
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+      ports:
+        - port: 15672

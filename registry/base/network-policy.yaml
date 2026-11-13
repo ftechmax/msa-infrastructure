@@ -1,0 +1,23 @@
+# No egress rules: the registry only serves images, so all outbound traffic is denied.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: registry
+spec:
+  podSelector:
+    matchLabels:
+      app: registry
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Image pulls by the nodes over the NodePort and pushes from build pods
+    - from:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+        - ipBlock:
+            cidr: 172.16.0.0/12
+        - ipBlock:
+            cidr: 192.168.0.0/16
+      ports:
+        - port: 5000
