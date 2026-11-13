@@ -5,3 +5,6 @@ istio/base/charts/
 *.crt
 *.key
 *.pem
+
+# Other
+/istio/overlays/internal/

@@ -98,6 +98,12 @@ over its NodePort keep working.
 
 ## Accessing services
 
+Configure the HTTPS domain and TLS Secret name in
+`istio/overlays/local/settings.yaml` (default: `kube.internal` and
+`gateway-tls`). The Secret must exist in `istio-ingress` with a certificate
+covering `*.kube.internal`. HTTP requests for the configured domain and
+its subdomains redirect to HTTPS with status 301.
+
 Web UIs are exposed through the Istio `Gateway` in `istio-ingress` (HTTP on
 port 80) via `HTTPRoute`s on the `*.kube.local` domain:
 

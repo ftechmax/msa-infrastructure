@@ -3,3 +3,56 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - settings.yaml
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: istio-settings
+      fieldPath: data.domain
+    targets:
+      - select:
+          kind: Gateway
+          name: gateway
+        fieldPaths:
+          - spec.listeners.[name=https].hostname
+        options:
+          delimiter: '.'
+          index: 1
+      - select:
+          kind: HTTPRoute
+          name: http-to-https-redirect
+        fieldPaths:
+          - spec.hostnames.0
+        options:
+          delimiter: '.'
+          index: 1
+      - select:
+          kind: HTTPRoute
+          name: http-to-https-redirect
+        fieldPaths:
+          - spec.hostnames.1
+  - source:
+      kind: ConfigMap
+      name: istio-settings
+      fieldPath: data.tlsSecretName
+    targets:
+      - select:
+          kind: Gateway
+          name: gateway
+        fieldPaths:
+          - spec.listeners.[name=https].tls.certificateRefs.0.name
+
+# Narrow the API server egress from the private address ranges to the node
+# network, e.g. 192.168.1.0/24:
+# patches:
+#   - target:
+#       kind: NetworkPolicy
+#       name: istiod
+#       namespace: istio-system
+#     patch: |-
+#       - op: replace
+#         path: /spec/egress/0/to
+#         value:
+#           - ipBlock:
+#               cidr: <node-cidr>

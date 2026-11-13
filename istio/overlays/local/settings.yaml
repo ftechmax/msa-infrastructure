@@ -1,0 +1,10 @@
+# local-config keeps these settings out of the applied manifests.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-settings
+  annotations:
+    config.kubernetes.io/local-config: 'true'
+data:
+  domain: kube.internal
+  tlsSecretName: gateway-tls

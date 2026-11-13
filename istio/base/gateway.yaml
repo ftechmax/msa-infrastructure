@@ -7,9 +7,20 @@ spec:
   gatewayClassName: istio
   listeners:
     - name: http
-      hostname: '*'
       port: 80
       protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      hostname: '*.invalid'
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: gateway-tls
       allowedRoutes:
         namespaces:
           from: All
